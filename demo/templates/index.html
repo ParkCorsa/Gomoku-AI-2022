@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>五子棋</title>
+    <link type="text/css" rel="stylesheet" href="../static/css/style.css">
+    <style type="text/css">
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    </style>
+    <script src="../static/lib/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+
+    <h1>Gomoku Playground by Park Corsa(Introducing "swap2" rule)</h1>
+
+    <div class="nav">
+        <canvas id="mycanvas" width="600px" height="600px" onclick="play(event)"></canvas>    
+    </div>
+
+    <div>
+        <input type="button" value="重新开始" onclick="replay()" class="mybutton">    
+    </div>
+
+    <div>
+        <input type="button" value="人机对战" onclick="_1p()" class="mybutton">
+    </div>
+
+    <div>
+        <input type="button" value="人人对战" onclick="_2p()" class="mybutton">
+    </div>
+
+    <div>
+        <input type="button" value="先手" onclick="xian()" class="mybutton">
+    </div>    
+    
+    <div>
+        <input type="button" value="后手" onclick="hou()" class="mybutton">
+    </div>
+
+    <div>
+        <input type="button" value="换手" onclick="swap2()" class="mybutton">
+    </div>
+
+    <script>
+
+        var chess = document.getElementById("mycanvas");
+        var ctx = chess.getContext("2d");
+        var count = 15;
+        var map = new Array(count);
+        var turn = 0;
+
+        for (var i = 0; i < map.length; i++) {
+            map[i] = new Array(count);
+            for (var j = 0; j < map[i].length; j++) {
+                map[i][j] = 0;
+            }
+        }
+
+        for(var i=0;i<15;i++){
+            ctx.strokeStyle="#fff";
+            ctx.moveTo(15+i*30,15);//vertical lines x15, dis:30px;
+            ctx.lineTo(15+i*30,435);
+            ctx.stroke();
+            ctx.moveTo(15,15+i*30);//horizontal lines x15，dis:30px;
+            ctx.lineTo(435,15+i*30);
+            ctx.stroke();
+        }
+
+        var isBlack = true;
+
+        var tag = false;//是否swap
+
+        var type = false;
+
+        function oneStep(i,j,k){
+            ctx.beginPath();
+            ctx.arc(15+i*30,15+j*30,13,0,2*Math.PI);//drawChess
+            var g=ctx.createRadialGradient(15+i*30,15+j*30,13,15+i*30,15+j*30,0);//ColorSetting
+            if(k==0){ 
+                g.addColorStop(0,'#0A0A0A');//Black
+                g.addColorStop(1,'#636766');
+            }else {
+                g.addColorStop(0,'#D1D1D1');//White
+                g.addColorStop(1,'#F9F9F9');
+            }
+            ctx.fillStyle=g;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function replay(){
+            $.ajax({
+                    url: "/replay",
+                    type: 'post',
+                    dataType: 'json',
+                    data:{
+                        isReplay: true
+                    },
+                    success: function (data) {
+                        window.location.reload();                
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });
+        }
+
+        function _2p(){
+            type = false;
+            chess.onclick=function play(e) {
+                var x = e.offsetX;
+                var y = e.offsetY;
+                var i = Math.floor(x/30);
+                var j = Math.floor(y/30);
+                if( map[i][j] != 0 ) {
+                    alert("此处已经落子");
+                    return;
+                } 
+                if(isBlack){
+                    turn++;
+                    isBlack = false;
+                    oneStep(i,j,0);      
+                    map[i][j]=1;
+                    $.ajax({
+                        url: "/yes",
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            t: 1,
+                            row: i,
+                            col: j,                       
+                        },
+                        success: function (data) {
+                            if(data.code===201){
+                                alert('黑棋获胜');
+                                replay();
+                            }else if(data.code===202){
+                                alert('白棋获胜');
+                                replay();
+                            }
+                        },
+                        error: function(error){
+                            console.log(error);
+                        }
+                    });                
+                }else{
+                    turn++;
+                    isBlack = true;
+                    oneStep(i,j,1);    
+                    map[i][j]=2;
+                    $.ajax({
+                        url: "/yes",
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            t: 2,
+                            row: i,
+                            col: j,
+                        },
+                        success: function (data) {
+                            if(data.code===201){
+                                alert('黑棋获胜');
+                                replay();
+                            }else if(data.code===202){
+                                alert('白棋获胜');
+                                replay();
+                            }                    
+                        },
+                        error: function(error){
+                            console.log(error);
+                        }
+                    });
+                }
+            }
+        }
+
+        function swap2(){
+            if((type == false && turn != 3)||(type == true && turn != 1)){
+                alert("想什么呢小可爱，现在不能换手哦(●ˇ∀ˇ●)");
+                return;
+            }
+            alert("选择了换手"), turn++, tag = true;
+            for (var i = 0; i < map.length; i++) {
+                for (var j = 0; j < map[i].length; j++) {
+                    if(map[i][j]==2){
+                        oneStep(i,j,0);    
+                        map[i][j]=1;
+                    }
+                    else if(map[i][j]==1){
+                        oneStep(i,j,1);
+                        map[i][j]=2;
+                    }
+                }
+            }
+            if(type==true){
+                $.ajax({
+                    url: "/white",
+                    type: 'post',
+                    dataType: 'json',
+                    data: {
+                        t: 2,
+                        row: -1,
+                        col: -1,
+                    },
+                    success: function (data) {
+                        if(data.code===201){
+                            alert('黑棋获胜');
+                            replay();
+                        }else if(data.code===202){
+                            alert('白棋获胜');
+                            replay();
+                        }else if(data.code==203)map[data.x][data.y]=1, oneStep(data.x,data.y,0);
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });                
+            }else{
+                isBlack = true;
+                $.ajax({
+                    url: "/yes",
+                    type: 'post',
+                    dataType: 'json',
+                    data: {
+                        t: 2,
+                        row: -1,
+                        col: -1,
+                    },
+                    success: function (data) {
+                        if(data.code===201){
+                            alert('黑棋获胜');
+                            replay();
+                        }else if(data.code===202){
+                            alert('白棋获胜');
+                            replay();
+                        }                    
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });
+            }         
+        }
+
+        function xian() { 
+            isBlack = true;
+            chess.onclick=function play(e) {
+                turn++;
+                var x = e.offsetX;
+                var y = e.offsetY;
+                var i = Math.floor(x/30);
+                var j = Math.floor(y/30);
+                if( map[i][j] != 0 ) {
+                    alert("此处已经落子");
+                    return;
+                }    
+                oneStep(i,j,0), map[i][j]=1;
+                $.ajax({
+                    url: "/black",
+                    type: 'post',
+                    dataType: 'json',
+                    data: {
+                        t: 1,
+                        row: i,
+                        col: j,                       
+                    },
+                    success: function (data) {
+                        if(data.code===201){
+                            alert('黑棋获胜');
+                            replay();
+                        }else if(data.code===202){
+                            alert('白棋获胜');
+                            replay();
+                        }else if(data.code==203){
+                            if(data.x==-1&&data.y==-1){
+                                alert("对手进行了换手");
+                                for (var i = 0; i < map.length; i++) {
+                                    for (var j = 0; j < map[i].length; j++) {
+                                        if(map[i][j]==2){
+                                            oneStep(i,j,0);    
+                                            map[i][j]=1;
+                                        }
+                                        else if(map[i][j]==1){
+                                            oneStep(i,j,1);
+                                            map[i][j]=2;
+                                        }
+                                    }
+                                }
+                            }else map[data.x][data.y]=2, oneStep(data.x,data.y,1);
+                        }
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });  
+            } 
+        }
+
+        function hou() { 
+            isBlack = false;
+            $.ajax({
+                url: "/white",
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    t: 3,
+                    row: -1,
+                    col: -1,
+                },
+                success: function (data) {
+                    if(data.code===201){
+                        alert('黑棋获胜');
+                        replay();
+                    }else if(data.code===202){
+                        alert('白棋获胜');
+                        replay();
+                    }else if(data.code==203)map[data.x][data.y]=1, oneStep(data.x,data.y,0);
+                },
+                error: function(error){
+                    console.log(error);
+                }
+            });
+            chess.onclick=function play(e) {
+                turn++;
+                var x = e.offsetX;
+                var y = e.offsetY;
+                var i = Math.floor(x/30);
+                var j = Math.floor(y/30);
+                if( map[i][j] != 0 ) {
+                    alert("此处已经落子");
+                    return;
+                }                
+                $.ajax({
+                    url: "/white",
+                    type: 'post',
+                    dataType: 'json',
+                    data: {
+                        t: 2,
+                        row: i,
+                        col: j,
+                    },
+                    success: function (data) {
+                        if(data.code===201){
+                            alert('黑棋获胜');
+                            replay();
+                        }else if(data.code===202){
+                            alert('白棋获胜');
+                            replay();
+                        }else map[data.x][data.y]=1, oneStep(data.x,data.y,0);
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });
+                oneStep(i,j,1), map[i][j]=2;                    
+            }
+        }
+
+        function _1p(){
+            type = true;
+            alert("请决定先后手");               
+        }
+
+
+    </script>
+</body>
+</html>

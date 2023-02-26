@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>五子棋</title>
+    <style type="text/css">
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        padding-top: 28px;
+        width: 100%;
+    
+        font-family: "Microsoft soft";
+    }
+    
+    h1 {
+        text-align: center;
+        color: #1E88C7
+    }
+    
+    #canvas {
+        display: block;
+        margin: 135px auto;
+        background-color: rgb(221, 168, 21);
+    }
+
+    .mybutton {
+                width: 200px;
+                line-height: 40px;
+                text-align: center;
+                background-color: cornflowerblue;
+                margin: 0 auto;
+                margin-top: 20px;
+                font-size: 20px;
+                color: #fff;
+            }
+    </style>
+    <script src="../demo/Gomoku-AI/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <canvas id="mycanvas" width="600" height="600" onclick="play(event)"></canvas>    
+    
+    <div>
+        <input type="button" value="重新开始" onclick="replay()" class="mybutton">    
+    </div>          
+    
+    <script>
+
+        var chess = document.getElementById("mycanvas");
+        var ctx = chess.getContext("2d");
+        var count = 15;
+        var map = new Array(count);
+
+        for (var i = 0; i < map.length; i++) {
+            map[i] = new Array(count);
+            for (var j = 0; j < map[i].length; j++) {
+                map[i][j] = 0;
+            }
+        }
+
+        for(var i=0;i<15;i++){
+            ctx.strokeStyle="#D6D1D1";
+            ctx.moveTo(15+i*30,15);//vertical lines x15, dis:30px;
+            ctx.lineTo(15+i*30,435);
+            ctx.stroke();
+            ctx.moveTo(15,15+i*30);//horizontal lines x15，dis:30px;
+            ctx.lineTo(435,15+i*30);
+            ctx.stroke();
+        }
+
+        var isBlack = true;
+
+        function oneStep(i,j){
+            ctx.beginPath();
+            ctx.arc(15+i*30,15+j*30,13,0,2*Math.PI);//drawChess
+            var g=ctx.createRadialGradient(15+i*30,15+j*30,13,15+i*30,15+j*30,0);//ColorSetting
+            if(isBlack){ 
+                g.addColorStop(0,'#0A0A0A');//Black
+                g.addColorStop(1,'#636766');
+            }else {
+                g.addColorStop(0,'#D1D1D1');//White
+                g.addColorStop(1,'#F9F9F9');
+            }
+            ctx.fillStyle=g;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        chess.onclick=function play(e) {
+            var x = e.offsetX;
+            var y = e.offsetY;
+            var i = Math.floor(x/30);
+            var j = Math.floor(y/30);
+            if( map[i][j] != 0 ) {
+                alert("此处已经落子");
+                return;
+            }    
+            oneStep(i,j);
+            if(isBlack){
+                isBlack = false;      
+                map[i][j]=1;
+                $.ajax({
+                    url: "/yes",
+                    type: 'post',
+                    dataType: 'json',
+                    data: JSON.stringify({
+                        t: 1,
+                        row: i,
+                        col: j,                       
+                    }),
+                    success: function (data) {
+                        if(data.code===201){
+                            alert('黑棋获胜')
+                        }else if(data.code===202){
+                            alert('白棋获胜')
+                        }
+                    },
+                    error: function(error){
+                        console.log(error)
+                    }
+                });                
+            }else{
+                isBlack = true;
+                map[i][j]=2;
+                $.ajax({
+                    url: "/yes",
+                    type: 'post',
+                    dataType: 'json',
+                    data: JSON.stringify({
+                        t: 2,
+                        row: i,
+                        col: j,
+                    }),
+                    success: function (data) {
+                        if(data.code===201){
+                            alert('黑棋获胜')
+                        }else if(data.code===202){
+                            alert('白棋获胜')
+                        }                    
+                    },
+                    error: function(error){
+                        console.log(error)
+                    }
+                });
+            }
+        }
+
+        function replay(){
+            $.ajax({
+                    url: "/replay",
+                    type: 'post',
+                    dataType: 'json',
+                    data:JSON.stringify({
+                        isReplay: true
+                    }),
+                    success: function (data) {
+                        window.location.href = "index.html";                
+                    },
+                    error: function(error){
+                        console.log(error)
+                    }
+                });
+        }
+
+    </script>
+</body>
+</html>

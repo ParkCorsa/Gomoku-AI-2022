@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <title>Gomoku</title>
+    <link type="text/css" rel="stylesheet" href="../demo/Gomoku-AI/style.css">
+    <script src="../demo/Gomoku-AI/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+
+    <h1>Gomoku Playground v0.1</h1>
+    <p id="textboard">
+        
+    </p>
+
+    <canvas id="canvas" width="480" height="480">
+
+    </canvas>
+    
+    <script>
+
+        $.get("/action/10+10", (data, status) => {
+            console.log(data);
+            $("#textboard").text(data);
+        })    
+
+    </script>
+
+</body>
+
+</html>

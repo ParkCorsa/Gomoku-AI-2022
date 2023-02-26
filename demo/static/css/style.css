@@ -1,0 +1,40 @@
+body {
+    padding-top: 28px;
+    width: 100%;
+    background-color: lightblue;
+    font-family: "Microsoft soft";
+}
+
+.wrap1{width:100px;
+    height:80px;
+    margin:0 auto;} 
+
+.wrap1{width:80px;
+    height:80px;
+    margin:0 auto;} 
+
+.nav{text-align:center;}
+.nav ul{display:inline;}
+
+h1 {
+    text-align: center;
+    color: #1E88C7
+}
+
+#canvas {
+    display: block;
+    margin: 135px auto;
+    background-color: rgb(221, 168, 21);
+}
+
+.mybutton {
+    width: 200px;
+    line-height: 40px;
+    text-align: center;
+    background-color: cornflowerblue;
+    margin: 0 auto;
+    margin-top: 20px;
+    font-size: 20px;
+    display: inline-block;
+    color: #fff;
+}

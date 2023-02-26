@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <title>Gomoku</title>
+    <style type="text/css">
+        #canvas {
+            display: block;
+            margin: 135px auto;
+            background-color: rgb(221, 168, 21);
+        }
+    </style>
+    <script src="../demo/Gomoku-AI/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <canvas id="mycanvas" width="450px" height="450px"></canvas>
+    <script type="text/javascript">
+        var chess = document.getElementById("mycanvas");
+        var context = chess.getContext('2d');
+        var me = true;
+        var chessBox = [];//The chesses put on the board
+        for(var i=0;i<15;i++){
+            chessBox[i]=[];
+            for(var j=0;j<15;j++){
+                chessBox[i][j]=0;//0 means empty
+            }
+        }
+        function drawChessBoard(){
+            for(var i=0;i<15;i++){
+                context.strokeStyle="#D6D1D1";
+                context.moveTo(15+i*30,15);//vertical lines x15, dis:30px;
+                context.lineTo(15+i*30,435);
+                context.stroke();
+                context.moveTo(15,15+i*30);//horizontal lines x15，dis:30px;
+                context.lineTo(435,15+i*30);
+                context.stroke();
+            }
+        }
+        drawChessBoard();
+        function oneStep(i,j,k){
+            context.beginPath();
+            context.arc(15+i*30,15+j*30,13,0,2*Math.PI);//drawChess
+            var g=context.createRadialGradient(15+i*30,15+j*30,13,15+i*30,15+j*30,0);//ColorSetting
+            if(k){                           //k=true is black
+                g.addColorStop(0,'#0A0A0A');//Black
+                g.addColorStop(1,'#636766');
+            }else {
+                g.addColorStop(0,'#D1D1D1');//White
+                g.addColorStop(1,'#F9F9F9');
+            }
+            context.fillStyle=g;
+            context.fill();
+            context.closePath();
+        }
+        chess.onclick=function(e){
+            var x = e.offsetX;
+            var y = e.offsetY;
+            var i = Math.floor(x/30);
+            var j = Math.floor(y/30);
+            if( chessBox[i][j] == 0 ) {
+                oneStep(i,j,me);
+                if(me){
+                    chessBox[i][j]=1;
+                }else{
+                    chessBox[i][j]=2;
+                }
+                me=!me;//next is white
+            }
+        }
+    </script>
+</body>
+</html>
